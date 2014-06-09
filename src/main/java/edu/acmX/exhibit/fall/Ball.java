@@ -8,7 +8,7 @@ public class Ball {
     private float x;
     private float y;
     private float radius;
-    private Rectangle2D rect;
+    public Rectangle2D rect;
     public static int COLOR;
 	//does this need to be public?
     public static int SPEED;
@@ -52,6 +52,10 @@ public class Ball {
 		if(y < parent.height - radius){
 			y = y + gravity;
 		}
+	}
+
+	public void rise(int t){
+		y -= t;
 	}
 
     public void setX(float x) {

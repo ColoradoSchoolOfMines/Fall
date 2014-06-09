@@ -7,10 +7,8 @@ import edu.mines.acmX.exhibit.input_services.hardware.drivers.InvalidConfigurati
 import edu.mines.acmX.exhibit.module_management.modules.ProcessingModule;
 import edu.mines.acmX.exhibit.input_services.hardware.*;
 import edu.mines.acmX.exhibit.stdlib.input_processing.tracking.HandTrackingUtilities;
-import processing.core.PImage;
 
-import java.awt.*;
-import java.awt.List;
+import java.awt.geom.Rectangle2D;
 import java.rmi.RemoteException;
 import java.util.*;
 
@@ -27,16 +25,17 @@ public class Module extends ProcessingModule{
     private float handY;
     private boolean gamePaused;
     private Ball ball;
-	private int BACKGROND_COLOR;
+	private int BACKGROUND_COLOR;
 	private ArrayList<Obstacle> obstacleList;
 	private static int count = 0;
+	private int obstacleRate = 200;
+	public boolean collide = false;
 
     public void setup() {
-		BACKGROND_COLOR = color(81,159,201);
-        background(BACKGROND_COLOR);
+		BACKGROUND_COLOR = color(81,159,201);
+        background(BACKGROUND_COLOR);
 		ball = new Ball(this, width / 2, 50, 50);
 		obstacleList = new ArrayList<>();
-		//obstacleList.add(new Obstacle(this));
         registerTracking();
         gamePaused = true;
     }
@@ -44,6 +43,7 @@ public class Module extends ProcessingModule{
     public void update() {
         driver.updateDriver();
 		count++;
+		collide = false;
         if (receiver.whichHand() != -1) {
             gamePaused = false;
             float marginFraction = (float) 1 / 6;
@@ -51,19 +51,25 @@ public class Module extends ProcessingModule{
                     driver.getHandTrackingWidth(), width, marginFraction);
             handY = HandTrackingUtilities.getScaledHandY(receiver.getY(),
                     driver.getHandTrackingHeight(), height, marginFraction);
-			if(count %200 == 0){
+			if(count %obstacleRate == 0){
 				obstacleList.add(new Obstacle(this));
 			}
 			for(Obstacle o : obstacleList){
-				o.update();
 				o.rise(2);
+				o.update();
 			}
-			checkOffscreen();
-			ball.update();
-			ball.fall();
+			collide = checkCollisions();
+			if(collide){
+				ball.rise(2);
+			}
+			else{
+				ball.fall();
+			}
 			if(ball.getY() <= 0){
 				gamePaused = true;
 			}
+			ball.update();
+			checkOffscreen();
         }
         else if (receiver.whichHand() == -1) {
             gamePaused = true;
@@ -72,7 +78,7 @@ public class Module extends ProcessingModule{
 
     public void draw() {
 		update();
-		background(BACKGROND_COLOR);
+		background(BACKGROUND_COLOR);
 		if (gamePaused) {
 			textAlign(CENTER, CENTER);
 			textSize(96);
@@ -88,10 +94,21 @@ public class Module extends ProcessingModule{
 
 	public void checkOffscreen() {
 		for(Obstacle o: obstacleList){
-			if(o.getY() <= 5){
+			if(o.getY() <= 0){
 				obstacleList.remove(o);
 			}
 		}
+	}
+
+	public boolean checkCollisions() {
+		for(Obstacle o : obstacleList) {
+			Rectangle2D intersect1 = ball.rect.createIntersection(o.left);
+			Rectangle2D intersect2 = ball.rect.createIntersection(o.right);
+			if (!intersect1.isEmpty() || !intersect2.isEmpty()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
     public void registerTracking() {
