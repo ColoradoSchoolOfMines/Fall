@@ -5,12 +5,10 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Random;
 
-/**
- * Created by User on 6/9/2014.
- */
+
 public class Obstacle {
 	private int y, x;
-	private int gap = 125;
+	private int gap = 200;
 	private int height = 25;
 	private Module parent;
 	private int COLOR = 125;
@@ -20,23 +18,25 @@ public class Obstacle {
 		this.parent = parent;
 		y = parent.height;
 		x = randomGen();
-		left = new Rectangle2D.Float(0,y,height,x);
-		right = new Rectangle2D.Float(x + gap, y, height, parent.width - (gap + x));
+        left = new Rectangle2D.Float(0,y,x,height);
+        right = new Rectangle2D.Float(x + gap, y, parent.width - (gap + x), height);
 	}
 
 	public void update() {
-		left.setRect(0,y,height,x);
-		right.setRect(x + gap, y, height, parent.width - (gap + x));
+        //Update rects
+		left.setRect(0,y,x,height);
+		right.setRect(x + gap, y, parent.width - (gap + x), height);
 	}
 
 	public void draw() {
 		parent.fill(COLOR);
-		parent.rect((float) left.getX(), (float) left.getY(), (float) left.getHeight(), (float) left.getWidth());
-		parent.rect((float)(right.getX()), (float)(right.getY()), (float) right.getHeight(),(float) right.getWidth());
+        //Draw rectangles
+		parent.rect((float) left.getX(), (float) left.getY(), (float) left.getWidth(), (float) left.getHeight());
+        parent.rect((float)(right.getX()), (float)(right.getY()), (float) right.getWidth(),(float) right.getHeight());
 	}
-
+    //Function to decide where the gap gets put
 	public int randomGen(){
-		return 1 + (int)(Math.random()*(parent.width - gap - 1));
+        return 1 + (int)(Math.random()*(parent.width - gap - 1));
 	}
 
 	public void setY(int y){
@@ -49,6 +49,5 @@ public class Obstacle {
 
 	public void rise(int t){
 		this.y -= t;
-		//this.y = y;
 	}
 }

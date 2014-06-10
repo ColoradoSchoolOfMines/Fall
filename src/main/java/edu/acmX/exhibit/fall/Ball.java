@@ -28,23 +28,27 @@ public class Ball {
 
     public void draw() {
         parent.fill(COLOR);
+        //Draw rectangle at ball's location
 		parent.rect(x, y, radius, radius);
-        //parent.(x, y, radius, radius);
+
     }
 
     public void update() {
 		int handPosX = (int) parent.getHandX();
+        //Eliminate jitter
 		if(handPosX > x + radius / 3 && handPosX < x + 2 * radius / 3) {
 			return ;
 		}
+        //Move to the left
 		if(x + radius / 2 > handPosX) {
 			x -= SPEED;
 		}
+        //Move to the right
 		else if(x + radius / 2 < handPosX) {
 			x += SPEED;
 		}
 
-		// update rect
+		// Update rect
 		rect.setRect(x, y, radius, radius);
     }
 
@@ -52,18 +56,19 @@ public class Ball {
 		if(y < parent.height - radius){
 			y = y + gravity;
 		}
-	}
-
-	public void rise(int t){
-		y -= t;
+		
 	}
 
     public void setX(float x) {
         this.x = x;
+        // Update rect
+        rect.setRect(x, y, radius, radius);
     }
 
 	public void setY(float y) {
 		this.y = y;
+        // update rect
+        rect.setRect(x, y, radius, radius);
 	}
 
 	public float getX() {

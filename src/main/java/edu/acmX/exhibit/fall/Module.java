@@ -12,9 +12,7 @@ import java.awt.geom.Rectangle2D;
 import java.rmi.RemoteException;
 import java.util.*;
 
-/**
- * Created by User on 6/6/2014.
- */
+
 public class Module extends ProcessingModule{
 
     private static EventManager eventManager;
@@ -24,26 +22,28 @@ public class Module extends ProcessingModule{
     private float handX;
     private float handY;
     private boolean gamePaused;
+    private boolean gameLost = false;
     private Ball ball;
 	private int BACKGROUND_COLOR;
 	private ArrayList<Obstacle> obstacleList;
 	private static int count = 0;
 	private int obstacleRate = 200;
 	public boolean collide = false;
+    private int score = 0;
+    public static final int OBSTACLE_POINTS = 5;
+
 
     public void setup() {
 		BACKGROUND_COLOR = color(81,159,201);
         background(BACKGROUND_COLOR);
 		ball = new Ball(this, width / 2, 50, 50);
-		obstacleList = new ArrayList<>();
+		obstacleList = new ArrayList<>();  //each wall/hole combo as obstacles
         registerTracking();
         gamePaused = true;
     }
 
     public void update() {
         driver.updateDriver();
-		count++;
-		collide = false;
         if (receiver.whichHand() != -1) {
             gamePaused = false;
             float marginFraction = (float) 1 / 6;
@@ -51,29 +51,36 @@ public class Module extends ProcessingModule{
                     driver.getHandTrackingWidth(), width, marginFraction);
             handY = HandTrackingUtilities.getScaledHandY(receiver.getY(),
                     driver.getHandTrackingHeight(), height, marginFraction);
-			if(count %obstacleRate == 0){
-				obstacleList.add(new Obstacle(this));
-			}
-			for(Obstacle o : obstacleList){
-				o.rise(2);
-				o.update();
-			}
-			collide = checkCollisions();
-			if(collide){
-				ball.rise(2);
-			}
-			else{
-				ball.fall();
-			}
-			if(ball.getY() <= 0){
-				gamePaused = true;
-			}
-			ball.update();
-			checkOffscreen();
         }
         else if (receiver.whichHand() == -1) {
             gamePaused = true;
         }
+        if (!gamePaused && !gameLost){ //while game is still running
+            count++;
+            collide = false;
+			if(count % obstacleRate == 0){
+                score += OBSTACLE_POINTS; //add score when obstacle is created
+				obstacleList.add(new Obstacle(this));
+			}
+            //Make all obstacles rise
+			for(Obstacle o : obstacleList){
+				o.rise(2);
+				o.update();
+			}
+            //Does the ball hit an obstacle
+			collide = checkCollisions();
+			if(!collide) {
+                ball.fall();
+            }
+            //If we reach the top of the screen, game over
+			if(ball.getY() <= 0){
+				gamePaused = true;
+                gameLost = true;
+			}
+			ball.update();
+			checkOffscreen();
+        }
+
     }
 
     public void draw() {
@@ -90,8 +97,15 @@ public class Module extends ProcessingModule{
 		for(Obstacle o : obstacleList){
 			o.draw();
 		}
+        drawScore();
     }
-
+    // Prints the score in the upper right portion of the screen
+    public void drawScore() {
+        fill(255, 215, 0);
+        textSize(32);
+        text("" + score, 19 * width / 20, height / 20);
+    }
+    //When the obstacles reach the top of the screen, delete them
 	public void checkOffscreen() {
 		for(Obstacle o: obstacleList){
 			if(o.getY() <= 0){
@@ -99,12 +113,13 @@ public class Module extends ProcessingModule{
 			}
 		}
 	}
-
+    //When the ball intersects a wall, put it on top of the wall
 	public boolean checkCollisions() {
 		for(Obstacle o : obstacleList) {
 			Rectangle2D intersect1 = ball.rect.createIntersection(o.left);
 			Rectangle2D intersect2 = ball.rect.createIntersection(o.right);
 			if (!intersect1.isEmpty() || !intersect2.isEmpty()) {
+                ball.setY(o.getY()-ball.getRadius());
 				return true;
 			}
 		}

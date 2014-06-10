@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest 
+	package="edu.acmX.exhibit.fall"
+	class="Module"
+	icon="squash_icon.png"
+	title="Fall"
+	author="skerr ekoerlin"
+	version="0.1">
+
+    <uses-sdk 
+		minSdkVersion="0"
+		targetSdkVersion=""/>
+
+	<inputs>
+		<!-- remove input tag if no input types are needed -->
+        <input input-type="handtracking"/>
+        
+    </inputs>
+	<requires-module>
+	</requires-module>
+
+</manifest>
+<!-- vim:fenc=utf-8
+  -->
