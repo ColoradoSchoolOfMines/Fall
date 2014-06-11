@@ -31,12 +31,13 @@ public class Module extends ProcessingModule{
 	public boolean collide = false;
     private int score = 0;
     public static final int OBSTACLE_POINTS = 5;
+    private static final int RISE_SPEED = 2;
 
 
     public void setup() {
 		BACKGROUND_COLOR = color(81,159,201);
         background(BACKGROUND_COLOR);
-		ball = new Ball(this, width / 2, 50, 50);
+		ball = new Ball(this, width / 2, width/30, width/30);
 		obstacleList = new ArrayList<>();  //each wall/hole combo as obstacles
         registerTracking();
         gamePaused = true;
@@ -55,16 +56,16 @@ public class Module extends ProcessingModule{
         else if (receiver.whichHand() == -1) {
             gamePaused = true;
         }
-        if (!gamePaused && !gameLost){ //while game is still running
+        if (!gamePaused && !gameLost){ //while game is still playing
             count++;
             collide = false;
+            //Add a new obstacle every obstacleRate updates
 			if(count % obstacleRate == 0){
-                score += OBSTACLE_POINTS; //add score when obstacle is created
 				obstacleList.add(new Obstacle(this));
 			}
             //Make all obstacles rise
 			for(Obstacle o : obstacleList){
-				o.rise(2);
+				o.rise(RISE_SPEED);
 				o.update();
 			}
             //Does the ball hit an obstacle
@@ -105,11 +106,12 @@ public class Module extends ProcessingModule{
         textSize(32);
         text("" + score, 19 * width / 20, height / 20);
     }
-    //When the obstacles reach the top of the screen, delete them
+    //When the obstacles reach the top of the screen, delete them and add too score
 	public void checkOffscreen() {
 		for(Obstacle o: obstacleList){
 			if(o.getY() <= 0){
 				obstacleList.remove(o);
+                score += OBSTACLE_POINTS; //add score when obstacle is deleted
 			}
 		}
 	}

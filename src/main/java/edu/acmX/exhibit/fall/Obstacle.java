@@ -8,14 +8,16 @@ import java.util.Random;
 
 public class Obstacle {
 	private int y, x;
-	private int gap = 200;
-	private int height = 25;
+	private int gap;
+	private int height;
 	private Module parent;
 	private int COLOR = 125;
 	public Rectangle2D left, right;
 
 	public Obstacle(Module parent){
 		this.parent = parent;
+        gap = parent.width/10;
+        height = parent.height/40;
 		y = parent.height;
 		x = randomGen();
         left = new Rectangle2D.Float(0,y,x,height);

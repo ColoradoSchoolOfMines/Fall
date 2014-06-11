@@ -21,7 +21,7 @@ public class Ball {
         this.radius = radius;
         rect = new Rectangle2D.Float(x, y, radius, radius);
         COLOR = parent.color(176, 196, 222);
-        SPEED = parent.height/60;
+        SPEED = parent.height/100;
 		gravity = parent.height/120;
     }
 
