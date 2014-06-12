@@ -69,6 +69,9 @@ public class Module extends ProcessingModule{
 		playAgain = new HoverClick(1000, playAgainRect);
 		submitScoreRect = new Rectangle(7 * width / 10, 5 * height / 7, width / 5, height / 5);
 		submitScore = new HoverClick(1000, submitScoreRect);
+		noCursor();
+		cursor_image = loadImage(CURSOR_FILENAME);
+		cursor_image.resize(32, 32);
 		saver = new ScoreSaver("Fall");
         registerTracking();
         gamePaused = true;
@@ -165,13 +168,15 @@ public class Module extends ProcessingModule{
 			text("Wave to Continue", width / 2, height / 2);
 			textAlign(LEFT, TOP);
 		}
-		ball.draw();
-		synchronized (this) {
-			for (Obstacle o : obstacleList) {
-				o.draw();
+		if(!gameLost) {
+			ball.draw();
+			synchronized (this) {
+				for (Obstacle o : obstacleList) {
+					o.draw();
+				}
 			}
+			drawScore();
 		}
-        drawScore();
     }
     // Prints the score in the upper right portion of the screen
     public void drawScore() {
@@ -206,7 +211,8 @@ public class Module extends ProcessingModule{
 	}
 
 	public void drawGameOver() {
-		fill(0,0,0);
+		background(BACKGROUND_COLOR);
+		fill(0, 0, 0);
 		rect(0, 0, width, height);
 		fill(255, 69, 0);
 		textSize(min(width / 8, height / 6));
@@ -219,7 +225,6 @@ public class Module extends ProcessingModule{
 		textSize(min(width / 16, height / 12));
 		text("HIGH SCORE:", width / 2, height / 2);
 		text(saver.getBestScoreString(ScoreSaver.ScorePattern.HIGH_BEST), width / 2, 3 * height / 5);
-
 		stroke(0);
 		strokeWeight(4);
 

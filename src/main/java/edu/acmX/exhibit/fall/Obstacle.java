@@ -17,7 +17,7 @@ public class Obstacle {
 	public Obstacle(Module parent){
 		this.parent = parent;
         gap = parent.width/8;
-        height = parent.height/40;
+        height = parent.height/20;
 		y = parent.height;
 		x = randomGen();
         left = new Rectangle2D.Float(0,y,x,height);
