@@ -16,7 +16,7 @@ public class Obstacle {
 
 	public Obstacle(Module parent){
 		this.parent = parent;
-        gap = parent.width/10;
+        gap = parent.width/8;
         height = parent.height/40;
 		y = parent.height;
 		x = randomGen();
