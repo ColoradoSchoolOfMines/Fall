@@ -60,7 +60,7 @@ public class Module extends ProcessingModule{
     public void setup() {
 		BACKGROUND_COLOR = color(81,159,201);
         background(BACKGROUND_COLOR);
-		ball = new Ball(this, width / 2, width/30, width/30);
+		ball = new Ball(this, width / 2, height/30, width/30);
 		obstacleList = new ArrayList<>();  //each wall/hole combo as obstacles
 		olToRemove = new ArrayList<>();
 		endRect = new Rectangle(width / 10, 5 * height/ 7, width / 5, height /5);
@@ -133,12 +133,18 @@ public class Module extends ProcessingModule{
 			playAgain.update((int) handX, (int) handY, millis());
 			submitScore.update((int) handX, (int) handY, millis());
 			if(end.durationCompleted(millis())) {
-				destroy();
-				driver.clearAllHands();
+
+					System.out.println("Before clearAllHands");
+					driver.clearAllHands();
+					destroy();
+				System.out.println("End");
+
 			} else if(playAgain.durationCompleted(millis())) {
 				noCursor();
 				score = 0;
 				gameLost = false;
+				gamePaused = false;
+				reset();
 			} else if(submitScore.durationCompleted(millis())) {
 				//saver.addNewScore(points);
 				receiver.hold();
@@ -208,6 +214,11 @@ public class Module extends ProcessingModule{
 			}
 			return false;
 		}
+	}
+
+	public void reset(){
+		obstacleList.clear();
+		ball.setY(width / 30);
 	}
 
 	public void drawGameOver() {
