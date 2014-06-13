@@ -22,15 +22,16 @@ import java.util.*;
 
 public class Module extends ProcessingModule{
 
-    private static EventManager eventManager;
-    private HandTrackerInterface driver;
-    private MyHandReceiver receiver;
+	private static EventManager eventManager;
+	private HandTrackerInterface driver;
+	private MyHandReceiver receiver;
 
-    private float handX;
-    private float handY;
-    private boolean gamePaused;
-    private boolean gameLost;
-    private Ball ball;
+	private float handX;
+	private float handY;
+	private boolean gamePaused;
+	private boolean gameLost;
+	private boolean submitted;
+	private Ball ball;
 	private int BACKGROUND_COLOR;
 	private ScoreSaver saver;
 	private HoverClick end;
@@ -39,15 +40,19 @@ public class Module extends ProcessingModule{
 	private Rectangle playAgainRect;
 	private HoverClick submitScore;
 	private Rectangle submitScoreRect;
+	private HoverClick end_s;
+	private Rectangle end_sRect;
+	private HoverClick playAgain_s;
+	private Rectangle playAgain_sRect;
 	private ArrayList<Obstacle> obstacleList;
 	private ArrayList<Obstacle> olToRemove;
 
 	private static int count = 0;
 	private int obstacleRate = 150;
 	public boolean collide = false;
-    private int score = 0;
-    public static final int OBSTACLE_POINTS = 5;
-    private static final int RISE_SPEED = 2;
+	private int score = 0;
+	public static final int OBSTACLE_POINTS = 5;
+	private static final int RISE_SPEED = 2;
 
 	public static final String CURSOR_FILENAME = "hand_cursor.png";
 	private PImage cursor_image;
@@ -57,9 +62,9 @@ public class Module extends ProcessingModule{
 	private static final String GAME_SUBMIT_TEXT = "Submit";
 
 
-    public void setup() {
+	public void setup() {
 		BACKGROUND_COLOR = color(81,159,201);
-        background(BACKGROUND_COLOR);
+		background(BACKGROUND_COLOR);
 		ball = new Ball(this, width / 2, height/30, width/30);
 		obstacleList = new ArrayList<>();  //each wall/hole combo as obstacles
 		olToRemove = new ArrayList<>();
@@ -69,29 +74,33 @@ public class Module extends ProcessingModule{
 		playAgain = new HoverClick(1000, playAgainRect);
 		submitScoreRect = new Rectangle(7 * width / 10, 5 * height / 7, width / 5, height / 5);
 		submitScore = new HoverClick(1000, submitScoreRect);
+		end_sRect = new Rectangle(width / 5, 5 * height/ 7, width / 5, height /5);
+		end_s = new HoverClick(1000, end_sRect);
+		playAgain_sRect = new Rectangle(3 * width / 5, 5 * height / 7, width / 5, height / 5);
+		playAgain_s = new HoverClick(1000, playAgain_sRect);
 		noCursor();
 		cursor_image = loadImage(CURSOR_FILENAME);
 		cursor_image.resize(32, 32);
 		saver = new ScoreSaver("Fall");
-        registerTracking();
-        gamePaused = true;
+		registerTracking();
+		gamePaused = true;
 		gameLost = false;
-    }
+	}
 
-    public void update() {
-        driver.updateDriver();
-        if (receiver.whichHand() != -1) {
-            gamePaused = false;
-            float marginFraction = (float) 1 / 6;
-            handX = HandTrackingUtilities.getScaledHandX(receiver.getX(),
-                    driver.getHandTrackingWidth(), width, marginFraction);
-            handY = HandTrackingUtilities.getScaledHandY(receiver.getY(),
-                    driver.getHandTrackingHeight(), height, marginFraction);
-        }
-        else if (receiver.whichHand() == -1) {
-            gamePaused = true;
-        }
-        if (!gameLost){ //while game is still playing
+	public void update() {
+		driver.updateDriver();
+		if (receiver.whichHand() != -1) {
+			gamePaused = false;
+			float marginFraction = (float) 1 / 6;
+			handX = HandTrackingUtilities.getScaledHandX(receiver.getX(),
+					driver.getHandTrackingWidth(), width, marginFraction);
+			handY = HandTrackingUtilities.getScaledHandY(receiver.getY(),
+					driver.getHandTrackingHeight(), height, marginFraction);
+		}
+		else if (receiver.whichHand() == -1) {
+			gamePaused = true;
+		}
+		if (!gameLost){ //while game is still playing
 			if(!gamePaused) {
 				count++;
 				collide = false;
@@ -127,25 +136,22 @@ public class Module extends ProcessingModule{
 				}
 				olToRemove.clear();
 			}
-        }
-		else{
+		}
+
+		else if(!submitted) {
 			end.update((int) handX, (int) handY, millis());
 			playAgain.update((int) handX, (int) handY, millis());
 			submitScore.update((int) handX, (int) handY, millis());
-			if(end.durationCompleted(millis())) {
-
-					System.out.println("Before clearAllHands");
-					driver.clearAllHands();
-					destroy();
-				System.out.println("End");
-
-			} else if(playAgain.durationCompleted(millis())) {
+			if (end.durationCompleted(millis())) {
+				driver.clearAllHands();
+				destroy();
+			} else if (playAgain.durationCompleted(millis())) {
 				noCursor();
 				score = 0;
 				gameLost = false;
 				gamePaused = false;
 				reset();
-			} else if(submitScore.durationCompleted(millis())) {
+			} else if (submitScore.durationCompleted(millis())) {
 				//saver.addNewScore(points);
 				receiver.hold();
 				handX = handY = 0;
@@ -153,15 +159,31 @@ public class Module extends ProcessingModule{
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						receiver.release();
+						submitted = true;
 					}
 				}, score, receiver.whichHand(), driver);
 				receiver.setHand(-1);
 			}
+		}else {
+			end_s.update((int) handX, (int) handY, millis());
+			playAgain_s.update((int) handX, (int) handY, millis());
+			if(end_s.durationCompleted(millis())) {
+				destroy();
+				driver.clearAllHands();
+			} else if(playAgain_s.durationCompleted(millis())) {
+				noCursor();
+				score = 0;
+				gameLost = false;
+				gamePaused = false;
+				submitted = false;
+				reset();
+			}
+
 		}
 
-    }
+	}
 
-    public void draw() {
+	public void draw() {
 		update();
 		background(BACKGROUND_COLOR);
 		if(gameLost){
@@ -183,14 +205,14 @@ public class Module extends ProcessingModule{
 			}
 			drawScore();
 		}
-    }
-    // Prints the score in the upper right portion of the screen
-    public void drawScore() {
-        fill(255, 215, 0);
-        textSize(32);
-        text("" + score, 19 * width / 20, height / 20);
-    }
-    //When the obstacles reach the top of the screen, delete them and add too score
+	}
+	// Prints the score in the upper right portion of the screen
+	public void drawScore() {
+		fill(255, 215, 0);
+		textSize(32);
+		text("" + score, 19 * width / 20, height / 20);
+	}
+	//When the obstacles reach the top of the screen, delete them and add too score
 	public void checkOffscreen() {
 		synchronized (this) {
 			for (Obstacle o : obstacleList) {
@@ -201,7 +223,7 @@ public class Module extends ProcessingModule{
 			}
 		}
 	}
-    //When the ball intersects a wall, put it on top of the wall
+	//When the ball intersects a wall, put it on top of the wall
 	public boolean checkCollisions() {
 		synchronized (this) {
 			for (Obstacle o : obstacleList) {
@@ -222,6 +244,10 @@ public class Module extends ProcessingModule{
 	}
 
 	public void drawGameOver() {
+		if(submitted) {
+			drawGameOverSubmitted();
+			return;
+		}
 		background(BACKGROUND_COLOR);
 		fill(0, 0, 0);
 		rect(0, 0, width, height);
@@ -271,36 +297,76 @@ public class Module extends ProcessingModule{
 
 	}
 
-    public void registerTracking() {
-        try {
-            driver = (HandTrackerInterface) getInitialDriver("handtracking");
-        } catch (BadFunctionalityRequestException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (InvalidConfigurationFileException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (UnknownDriverRequest e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch ( RemoteException e ) {
-            e.printStackTrace();
-        } catch ( BadDeviceFunctionalityRequestException e ) {
-            e.printStackTrace();
-        }
+	private void drawGameOverSubmitted() {
+		fill(324);
+		rect(0, 0, width, height);
+		fill(255, 69, 0);
+		textSize(min(width / 8, height / 6));
+		//rectMode(CENTER);
+		textAlign(CENTER, CENTER);
+		text("YOUR SCORE", width / 2, height / 6);
+		textSize(min(width / 12, height / 9));
+		text("" + saver.getLastSubmission(), width / 2, height / 3);
+		//textAlign(LEFT, TOP);
+		textSize(min(width / 16, height / 12));
+		text("HIGH SCORE:", width / 2, height / 2);
+		text(saver.getBestScoreString(ScoreSaver.ScorePattern.HIGH_BEST), width / 2, 3 * height / 5);
 
-        eventManager = EventManager.getInstance();
-        receiver = new MyHandReceiver();
-        eventManager.registerReceiver(EventType.HAND_CREATED, receiver);
-        eventManager.registerReceiver(EventType.HAND_UPDATED, receiver);
-        eventManager.registerReceiver(EventType.HAND_DESTROYED, receiver);
-    }
+		stroke(0);
+		strokeWeight(4);
 
-    public float getHandX() {
-        return handX;
-    }
+		fill(255, 0, 0);
+		rect(end_s.getX(), end_s.getY(), end_s.getWidth(), end_s.getHeight(), end_s.getWidth() / 6);
 
-    public float getHandY() {
-        return handY;
-    }
+		//draw text for end game box
+		textAlign(CENTER, CENTER);
+		textSize(end_s.getWidth() / 10);
+		fill(0, 0, 0);
+		text(GAME_END_TEXT, end_s.getX(), end_s.getY(), end_s.getWidth(), end_s.getHeight());
+
+		fill(50, 205, 50);
+		rect(playAgain_s.getX(), playAgain_s.getY(), playAgain_s.getWidth(), playAgain_s.getHeight(), playAgain_s.getWidth() / 6);
+
+		//draw text for new game box
+		textAlign(CENTER, CENTER);
+		textSize((float) playAgain_sRect.getWidth() / 10);
+		fill(0, 0, 0);
+		text(GAME_RESTART_TEXT, playAgain_s.getX(), playAgain_s.getY(), playAgain_s.getWidth(), playAgain_s.getHeight());
+
+		noStroke();
+		image(cursor_image, handX, handY);
+	}
+
+	public void registerTracking() {
+		try {
+			driver = (HandTrackerInterface) getInitialDriver("handtracking");
+		} catch (BadFunctionalityRequestException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidConfigurationFileException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnknownDriverRequest e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch ( RemoteException e ) {
+			e.printStackTrace();
+		} catch ( BadDeviceFunctionalityRequestException e ) {
+			e.printStackTrace();
+		}
+
+		eventManager = EventManager.getInstance();
+		receiver = new MyHandReceiver();
+		eventManager.registerReceiver(EventType.HAND_CREATED, receiver);
+		eventManager.registerReceiver(EventType.HAND_UPDATED, receiver);
+		eventManager.registerReceiver(EventType.HAND_DESTROYED, receiver);
+	}
+
+	public float getHandX() {
+		return handX;
+	}
+
+	public float getHandY() {
+		return handY;
+	}
 }
