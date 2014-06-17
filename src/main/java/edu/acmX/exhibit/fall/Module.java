@@ -79,7 +79,7 @@ public class Module extends ProcessingModule{
 		playAgain_sRect = new Rectangle(3 * width / 5, 5 * height / 7, width / 5, height / 5);
 		playAgain_s = new HoverClick(1000, playAgain_sRect);
 		noCursor();
-		frameRate(60);
+		frameRate(90);
 		cursor_image = loadImage(CURSOR_FILENAME);
 		cursor_image.resize(32, 32);
 		saver = new ScoreSaver("Fall");
